@@ -21,12 +21,25 @@ from vllm import LLM, SamplingParams
 @dataclass
 class InferenceConfig:
     # Hardcode this to the exact model used for the Kaggle submission.
+    # For final submission, this should point to your Hugging Face model repo.
     model_id: str = "Qwen/Qwen3-4B-Thinking-2507"
 
-    # Default final-submission dataset.
+    # -------------------------------------------------------------------------
+    # Current mode: quick public test
+    #
+    # For final TA submission, change these to:
+    #   data_path = "data/private.jsonl"
+    #   run_name = "submission"
+    #   eval_n = -1
+    #   score_outputs = False
+    # -------------------------------------------------------------------------
     data_path: str = "data/public.jsonl"
+    output_dir: str = "results"
+    run_name: str = "public_eval_5_16k"
+    eval_n: int = 5
+    score_outputs: bool = True
 
-    # These are usually overwritten with timestamped names.
+    # These are overwritten with timestamped names at runtime.
     output_csv_path: str = "results/submission.csv"
     output_jsonl_path: str = "results/final_results.jsonl"
 
@@ -41,12 +54,6 @@ class InferenceConfig:
     temperature: float = 0.6
     top_p: float = 0.95
     top_k: int = 20
-
-    # Use -1 for all examples, or a positive integer for quick testing.
-    eval_n: int = 5
-
-    # Public data has answers; private data does not.
-    score_outputs: bool = False
 
 
 SYSTEM_PROMPT_MATH = (
@@ -459,16 +466,16 @@ def run_inference(config: Optional[InferenceConfig] = None) -> None:
 # =============================================================================
 
 if __name__ == "__main__":
-    # Final private-set submission run.
-    # This is the configuration the TA should use for reproducibility.
-    run_inference()
-
-    # For quick local testing, temporarily replace the above with:
+    # Current configuration comes from InferenceConfig above.
+    # For final TA reproducibility, make sure InferenceConfig is set to:
     #
-    # run_inference(
-    #     data_path="data/public.jsonl",
-    #     output_dir="results",
-    #     run_name="public_eval_5_16k",
-    #     eval_n=5,
-    #     score_outputs=True,
-    # )
+    #   data_path = "data/private.jsonl"
+    #   run_name = "submission"
+    #   eval_n = -1
+    #   score_outputs = False
+    #
+    # Then run:
+    #
+    #   python run_inference.py
+    #
+    run_inference()
