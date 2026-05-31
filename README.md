@@ -20,7 +20,9 @@ The `response` column contains the full model-generated response, including the 
 
 ---
 
-## Quick Start: Reproduce Final Inference
+## Quick Start: Reproduce Our Kaggle Submission
+
+This is the intended path for instructional staff verification.
 
 From the repo root, install dependencies:
 
@@ -35,19 +37,17 @@ Then run:
 python run_inference.py
 ```
 
-By default, this calls:
+This command calls `run_inference()` using the default inference configuration in `run_inference.py`.
 
-```python
-run_inference()
-```
+These defaults are the same model path, prompt templates, sampling parameters, vLLM settings, and output formatting used for our Kaggle submission. To reproduce our submitted results, do not change the model path or inference hyperparameters.
 
-and reads:
+By default, the script reads:
 
 ```text
 data/private.jsonl
 ```
 
-It writes timestamped output files to:
+and writes timestamped output files to:
 
 ```text
 results/
@@ -60,7 +60,13 @@ results/submission_0531_1934.csv
 results/submission_0531_1934.jsonl
 ```
 
-The `.csv` file is the Kaggle submission file.
+The `.csv` file is the Kaggle submission file and has exactly:
+
+```csv
+id,response
+```
+
+No manual post-processing is required.
 
 ---
 
@@ -78,7 +84,13 @@ It is defined in:
 run_inference.py
 ```
 
-Default usage:
+For command-line verification, run:
+
+```bash
+python run_inference.py
+```
+
+For Python or notebook usage:
 
 ```python
 from run_inference import run_inference
@@ -86,93 +98,7 @@ from run_inference import run_inference
 run_inference()
 ```
 
-Equivalent command-line usage:
-
-```bash
-python run_inference.py
-```
-
 The default function call runs inference on the private dataset and writes the final submission CSV.
-
----
-
-## Running the Private Set
-
-To explicitly run the private set:
-
-```python
-from run_inference import run_inference
-
-run_inference(
-    data_path="data/private.jsonl",
-    output_dir="results",
-    run_name="private_submission_16k",
-    eval_n=-1,
-    score_outputs=False,
-)
-```
-
-This produces files like:
-
-```text
-results/private_submission_16k_0531_1934.csv
-results/private_submission_16k_0531_1934.jsonl
-```
-
-The CSV has exactly:
-
-```csv
-id,response
-```
-
----
-
-## Quick Public Evaluation
-
-To test the pipeline on public data with scoring:
-
-```python
-from run_inference import run_inference
-
-run_inference(
-    data_path="data/public.jsonl",
-    output_dir="results",
-    run_name="public_eval_10_16k",
-    eval_n=10,
-    score_outputs=True,
-)
-```
-
-This will:
-
-1. Load the first 10 public examples.
-2. Run inference.
-3. Score the responses using `judger.py`.
-4. Save timestamped JSONL and CSV output files.
-
-For a 100-question public evaluation:
-
-```python
-run_inference(
-    data_path="data/public.jsonl",
-    output_dir="results",
-    run_name="public_eval_100_16k",
-    eval_n=100,
-    score_outputs=True,
-)
-```
-
-To evaluate the full public dataset:
-
-```python
-run_inference(
-    data_path="data/public.jsonl",
-    output_dir="results",
-    run_name="public_eval_full_16k",
-    eval_n=-1,
-    score_outputs=True,
-)
-```
 
 ---
 
@@ -192,19 +118,19 @@ For example:
 benjiengee/qwen3-4b-thinking-sft-merged
 ```
 
-If using the base model instead of the fine-tuned model, the base model path is:
-
-```text
-Qwen/Qwen3-4B-Thinking-2507
-```
-
-The model path is set in `run_inference.py` inside the `InferenceConfig` class:
+The model path is hardcoded in `run_inference.py` inside the `InferenceConfig` class so that the pipeline matches our Kaggle submission:
 
 ```python
 model_id: str = "TODO: replace with final Hugging Face model path"
 ```
 
 During verification, the model is downloaded automatically from Hugging Face when `run_inference()` is called. No manual model download is required as long as the Hugging Face model repository is public.
+
+Base model:
+
+```text
+Qwen/Qwen3-4B-Thinking-2507
+```
 
 ---
 
@@ -331,9 +257,11 @@ For public evaluation, each row additionally contains gold answers and correctne
 
 ---
 
-## Final Inference Hyperparameters
+## Final Inference Configuration
 
 The final inference configuration is defined in `run_inference.py`.
+
+This is the configuration used for our Kaggle submission. To reproduce our submitted results, do not change the model path, prompt templates, sampling parameters, or vLLM settings.
 
 ```text
 max_tokens = 16384
@@ -347,6 +275,88 @@ quantization = bitsandbytes
 ```
 
 The prompt templates and all sampling parameters are included directly in `run_inference.py`.
+
+---
+
+## Optional: Manual Calls for Testing and Experimentation
+
+The following examples are provided for development, debugging, and public-set evaluation. They are not required for reproducing our Kaggle submission.
+
+For TA verification, use:
+
+```bash
+python run_inference.py
+```
+
+### Explicit Private-Set Call
+
+This is equivalent in purpose to the default command-line run, but allows changing output names during experimentation:
+
+```python
+from run_inference import run_inference
+
+run_inference(
+    data_path="data/private.jsonl",
+    output_dir="results",
+    run_name="private_submission_16k",
+    eval_n=-1,
+    score_outputs=False,
+)
+```
+
+This produces files like:
+
+```text
+results/private_submission_16k_0531_1934.csv
+results/private_submission_16k_0531_1934.jsonl
+```
+
+### Quick Public Evaluation
+
+To test the pipeline on public data with scoring:
+
+```python
+from run_inference import run_inference
+
+run_inference(
+    data_path="data/public.jsonl",
+    output_dir="results",
+    run_name="public_eval_10_16k",
+    eval_n=10,
+    score_outputs=True,
+)
+```
+
+This will:
+
+1. Load the first 10 public examples.
+2. Run inference.
+3. Score the responses using `judger.py`.
+4. Save timestamped JSONL and CSV output files.
+
+For a 100-question public evaluation:
+
+```python
+run_inference(
+    data_path="data/public.jsonl",
+    output_dir="results",
+    run_name="public_eval_100_16k",
+    eval_n=100,
+    score_outputs=True,
+)
+```
+
+To evaluate the full public dataset:
+
+```python
+run_inference(
+    data_path="data/public.jsonl",
+    output_dir="results",
+    run_name="public_eval_full_16k",
+    eval_n=-1,
+    score_outputs=True,
+)
+```
 
 ---
 
