@@ -24,7 +24,7 @@ class InferenceConfig:
     model_id: str = "Qwen/Qwen3-4B-Thinking-2507"
 
     # Default final-submission dataset.
-    data_path: str = "data/private.jsonl"
+    data_path: str = "data/public.jsonl"
 
     # These are usually overwritten with timestamped names.
     output_csv_path: str = "results/submission.csv"
@@ -43,7 +43,7 @@ class InferenceConfig:
     top_k: int = 20
 
     # Use -1 for all examples, or a positive integer for quick testing.
-    eval_n: int = -1
+    eval_n: int = 5
 
     # Public data has answers; private data does not.
     score_outputs: bool = False
