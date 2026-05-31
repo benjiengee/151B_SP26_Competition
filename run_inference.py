@@ -30,14 +30,14 @@ class InferenceConfig:
     # run_name = "submission"
     # eval_n = -1
     # output_dir: str = "results"
-    # score_outputs: bool = True
+    # score_outputs: bool = False
     # -------------------------------------------------------------------------
 
     data_path = "data/private.jsonl"
     run_name = "qwen-pe-submission"
     eval_n = -1
     output_dir: str = "results"
-    score_outputs: bool = True
+    score_outputs: bool = False
 
     # These are overwritten with timestamped names at runtime.
     output_csv_path: str = "results/submission.csv"
