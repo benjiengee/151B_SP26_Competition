@@ -25,18 +25,18 @@ class InferenceConfig:
     model_id: str = "Qwen/Qwen3-4B-Thinking-2507"
 
     # -------------------------------------------------------------------------
-    # Current mode: quick public test
-    #
-    # For final TA submission, change these to:
-    #   data_path = "data/private.jsonl"
-    #   run_name = "submission"
-    #   eval_n = -1
-    #   score_outputs = False
+    # For final TA submission, change to:
+    # data_path = "data/private.jsonl"
+    # run_name = "submission"
+    # eval_n = -1
+    # output_dir: str = "results"
+    # score_outputs: bool = True
     # -------------------------------------------------------------------------
-    data_path: str = "data/public.jsonl"
+
+    data_path = "data/private.jsonl"
+    run_name = "qwen-pe-submission"
+    eval_n = -1
     output_dir: str = "results"
-    run_name: str = "public_eval_5_16k"
-    eval_n: int = 5
     score_outputs: bool = True
 
     # These are overwritten with timestamped names at runtime.
