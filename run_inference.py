@@ -374,45 +374,30 @@ def build_detailed_records(
 # Single entry point
 # =============================================================================
 
-def run_inference(
-    data_path: str = "data/private.jsonl",
-    output_csv_path: Optional[str] = None,
-    output_jsonl_path: Optional[str] = None,
-    output_dir: str = "results",
-    run_name: str = "submission",
-    eval_n: int = -1,
-    score_outputs: bool = False,
-) -> None:
+def run_inference(config: Optional[InferenceConfig] = None) -> None:
     """
     Single entry point for the full inference pipeline.
 
-    Loads data, loads model, generates responses, optionally scores public data,
-    and writes the final Kaggle CSV.
-
-    If output paths are not provided, timestamped JSONL and CSV files are created.
+    Uses InferenceConfig as the source of truth for:
+    - model path
+    - data path
+    - output paths
+    - inference hyperparameters
+    - scoring mode
     """
+    if config is None:
+        config = InferenceConfig()
+
     run_timestamp = make_run_timestamp()
 
-    if output_jsonl_path is None or output_csv_path is None:
-        auto_jsonl_path, auto_csv_path = make_output_paths(
-            output_dir=output_dir,
-            run_name=run_name,
-            timestamp=run_timestamp,
-        )
-
-        if output_jsonl_path is None:
-            output_jsonl_path = auto_jsonl_path
-
-        if output_csv_path is None:
-            output_csv_path = auto_csv_path
-
-    config = InferenceConfig(
-        data_path=data_path,
-        output_csv_path=output_csv_path,
-        output_jsonl_path=output_jsonl_path,
-        eval_n=eval_n,
-        score_outputs=score_outputs,
+    auto_jsonl_path, auto_csv_path = make_output_paths(
+        output_dir=config.output_dir,
+        run_name=config.run_name,
+        timestamp=run_timestamp,
     )
+
+    config.output_jsonl_path = auto_jsonl_path
+    config.output_csv_path = auto_csv_path
 
     print_section("Run Configuration")
     print_kv("Run timestamp", run_timestamp)
