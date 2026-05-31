@@ -37,7 +37,7 @@ Then run:
 python run_inference.py
 ```
 
-This command calls `run_inference()` using the default inference configuration in `run_inference.py`.
+This command calls `run_inference()` using the default inference configuration hardcoded in `run_inference.py`.
 
 These defaults are the same model path, prompt templates, sampling parameters, vLLM settings, and output formatting used for our Kaggle submission. To reproduce our submitted results, do not change the model path or inference hyperparameters.
 
@@ -90,7 +90,16 @@ For command-line verification, run:
 python run_inference.py
 ```
 
-For Python or notebook usage:
+The bottom of `run_inference.py` contains:
+
+```python
+if __name__ == "__main__":
+    run_inference()
+```
+
+This means running `python run_inference.py` executes the final private-set inference pipeline directly.
+
+For Python or notebook usage, the same function can be called with:
 
 ```python
 from run_inference import run_inference
@@ -98,7 +107,11 @@ from run_inference import run_inference
 run_inference()
 ```
 
-The default function call runs inference on the private dataset and writes the final submission CSV.
+For TA verification, use the command-line path:
+
+```bash
+python run_inference.py
+```
 
 ---
 
@@ -276,6 +289,24 @@ quantization = bitsandbytes
 
 The prompt templates and all sampling parameters are included directly in `run_inference.py`.
 
+When running `python run_inference.py`, the terminal prints a formatted run configuration before inference begins, including:
+
+```text
+Run timestamp
+Model ID
+Data path
+Output CSV path
+Output JSONL path
+Max tokens
+Max model length
+Max sequences
+Max batched tokens
+Sampling parameters
+Evaluation/scoring mode
+```
+
+This is intended to make each run easier to verify and trace.
+
 ---
 
 ## Optional: Manual Calls for Testing and Experimentation
@@ -286,6 +317,43 @@ For TA verification, use:
 
 ```bash
 python run_inference.py
+```
+
+### Quick Local Public Test
+
+For quick testing, temporarily change the bottom of `run_inference.py` from:
+
+```python
+if __name__ == "__main__":
+    run_inference()
+```
+
+to:
+
+```python
+if __name__ == "__main__":
+    run_inference(
+        data_path="data/public.jsonl",
+        output_dir="results",
+        run_name="public_eval_5_16k",
+        eval_n=5,
+        score_outputs=True,
+    )
+```
+
+Then run:
+
+```bash
+python run_inference.py
+```
+
+This avoids issues with vLLM multiprocessing that can occur when running inline Python through stdin.
+
+Before final submission or TA verification, the bottom of `run_inference.py` should be restored to:
+
+```python
+if __name__ == "__main__":
+    run_inference()
 ```
 
 ### Explicit Private-Set Call
@@ -311,9 +379,9 @@ results/private_submission_16k_0531_1934.csv
 results/private_submission_16k_0531_1934.jsonl
 ```
 
-### Quick Public Evaluation
+### Public Evaluation from Python or Notebook
 
-To test the pipeline on public data with scoring:
+To test the pipeline on public data with scoring from Python or a notebook:
 
 ```python
 from run_inference import run_inference

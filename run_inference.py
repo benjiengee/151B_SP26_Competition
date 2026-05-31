@@ -14,21 +14,25 @@ from transformers import AutoTokenizer
 from vllm import LLM, SamplingParams
 
 
-# ── Configuration ──────────────────────────────────────────────────────────────
+# =============================================================================
+# Configuration
+# =============================================================================
 
 @dataclass
 class InferenceConfig:
+    # Hardcode this to the exact model used for the Kaggle submission.
     model_id: str = "Qwen/Qwen3-4B-Thinking-2507"
 
-    # For final private-set inference, use data/private.jsonl
+    # Default final-submission dataset.
     data_path: str = "data/private.jsonl"
 
-    # These will usually be generated automatically with timestamps
+    # These are usually overwritten with timestamped names.
     output_csv_path: str = "results/submission.csv"
     output_jsonl_path: str = "results/final_results.jsonl"
 
     gpu_id: str = "0"
 
+    # Final inference settings used for Kaggle submission.
     max_tokens: int = 16384
     max_model_len: int = 32768
     max_num_seqs: int = 16
@@ -38,10 +42,10 @@ class InferenceConfig:
     top_p: float = 0.95
     top_k: int = 20
 
-    # Use -1 for all examples, or a positive integer for quick testing
+    # Use -1 for all examples, or a positive integer for quick testing.
     eval_n: int = -1
 
-    # Public data has answers, private data does not
+    # Public data has answers; private data does not.
     score_outputs: bool = False
 
 
@@ -63,7 +67,29 @@ SYSTEM_PROMPT_MCQ = (
 )
 
 
-# ── Timestamped output paths ───────────────────────────────────────────────────
+# =============================================================================
+# Pretty printing helpers
+# =============================================================================
+
+def print_section(title: str) -> None:
+    print("\n" + "=" * 80)
+    print(title)
+    print("=" * 80)
+
+
+def print_subsection(title: str) -> None:
+    print("\n" + "-" * 80)
+    print(title)
+    print("-" * 80)
+
+
+def print_kv(key: str, value) -> None:
+    print(f"{key:<24}: {value}")
+
+
+# =============================================================================
+# Timestamped output paths
+# =============================================================================
 
 def make_run_timestamp() -> str:
     """Return a compact filesystem-safe timestamp in Pacific time."""
@@ -89,11 +115,12 @@ def make_output_paths(
     output_dir_path.mkdir(parents=True, exist_ok=True)
 
     base = output_dir_path / f"{run_name}_{timestamp}"
-
     return str(base.with_suffix(".jsonl")), str(base.with_suffix(".csv"))
 
 
-# ── Data loading ───────────────────────────────────────────────────────────────
+# =============================================================================
+# Data loading
+# =============================================================================
 
 def load_jsonl(path: str) -> list[dict]:
     with open(path, "r", encoding="utf-8") as f:
@@ -106,13 +133,20 @@ def select_eval_data(data: list[dict], eval_n: int) -> list[dict]:
     return data
 
 
-def print_dataset_stats(data: list[dict], label: str = "dataset") -> None:
+def get_dataset_stats(data: list[dict]) -> tuple[int, int, int]:
     n_mcq = sum(bool(d.get("options")) for d in data)
     n_free = sum(not d.get("options") for d in data)
-    print(f"{label}: {len(data)} questions ({n_mcq} MCQ, {n_free} free-form)")
+    return len(data), n_mcq, n_free
 
 
-# ── Prompt construction ───────────────────────────────────────────────────────
+def print_dataset_stats(data: list[dict], label: str) -> None:
+    total, n_mcq, n_free = get_dataset_stats(data)
+    print_kv(label, f"{total} questions ({n_mcq} MCQ, {n_free} free-form)")
+
+
+# =============================================================================
+# Prompt construction
+# =============================================================================
 
 def build_prompt(question: str, options: Optional[list]) -> tuple[str, str]:
     """Return (system_prompt, user_prompt) for a question."""
@@ -145,14 +179,18 @@ def build_chat_prompts(data: list[dict], tokenizer: AutoTokenizer) -> list[str]:
     return prompts
 
 
-# ── Model loading and generation ──────────────────────────────────────────────
+# =============================================================================
+# Model loading and generation
+# =============================================================================
 
 def load_model_and_tokenizer(config: InferenceConfig):
     os.environ["CUDA_VISIBLE_DEVICES"] = config.gpu_id
 
+    print_subsection("Loading tokenizer")
     tokenizer = AutoTokenizer.from_pretrained(config.model_id)
     tokenizer.pad_token = tokenizer.eos_token
 
+    print_subsection("Loading model with vLLM")
     llm = LLM(
         model=config.model_id,
         quantization="bitsandbytes",
@@ -175,6 +213,7 @@ def load_model_and_tokenizer(config: InferenceConfig):
         repetition_penalty=1.0,
     )
 
+    print("\nModel loaded successfully.")
     return tokenizer, llm, sampling_params
 
 
@@ -183,12 +222,19 @@ def generate_responses(
     prompts: list[str],
     sampling_params: SamplingParams,
 ) -> list[str]:
-    print(f"Generating responses for {len(prompts)} questions...")
+    print_subsection("Generating responses")
+    print_kv("Number of prompts", len(prompts))
+
     outputs = llm.generate(prompts, sampling_params=sampling_params)
-    return [out.outputs[0].text.strip() for out in outputs]
+    responses = [out.outputs[0].text.strip() for out in outputs]
+
+    print("\nGeneration complete.")
+    return responses
 
 
-# ── Scoring for public set only ───────────────────────────────────────────────
+# =============================================================================
+# Scoring for public set only
+# =============================================================================
 
 def extract_letter(text: str) -> str:
     match = re.search(r"\\boxed\{([A-Za-z])\}", text)
@@ -210,7 +256,8 @@ def score_responses(data: list[dict], responses: list[str]) -> list[dict]:
     judger = Judger(strict_extract=False)
     results = []
 
-    print("Scoring...")
+    print_subsection("Scoring responses")
+
     for item, response in tqdm(zip(data, responses), total=len(data), desc="Scoring"):
         is_mcq = bool(item.get("options"))
         gold = item["answer"]
@@ -238,6 +285,7 @@ def score_responses(data: list[dict], responses: list[str]) -> list[dict]:
             }
         )
 
+    print("\nScoring complete.")
     return results
 
 
@@ -248,25 +296,24 @@ def print_summary(results: list[dict]) -> None:
     def acc(subset: list[dict]) -> float:
         return sum(r["correct"] for r in subset) / len(subset) * 100 if subset else 0.0
 
-    print("=" * 50)
-    print("EVALUATION RESULTS")
-    print("=" * 50)
+    print_section("Evaluation Results")
     print(
-        f"MCQ       : {sum(r['correct'] for r in mcq_res):4d} / "
+        f"{'MCQ':<12}: {sum(r['correct'] for r in mcq_res):4d} / "
         f"{len(mcq_res):4d} ({acc(mcq_res):.2f}%)"
     )
     print(
-        f"Free-form : {sum(r['correct'] for r in free_res):4d} / "
+        f"{'Free-form':<12}: {sum(r['correct'] for r in free_res):4d} / "
         f"{len(free_res):4d} ({acc(free_res):.2f}%)"
     )
     print(
-        f"Overall   : {sum(r['correct'] for r in results):4d} / "
+        f"{'Overall':<12}: {sum(r['correct'] for r in results):4d} / "
         f"{len(results):4d} ({acc(results):.2f}%)"
     )
-    print("=" * 50)
 
 
-# ── Saving outputs ────────────────────────────────────────────────────────────
+# =============================================================================
+# Saving outputs
+# =============================================================================
 
 def save_jsonl(path: str, records: list[dict]) -> None:
     output_path = Path(path)
@@ -276,7 +323,7 @@ def save_jsonl(path: str, records: list[dict]) -> None:
         for record in records:
             f.write(json.dumps(record) + "\n")
 
-    print(f"Saved JSONL to {output_path}")
+    print_kv("Saved JSONL", output_path)
 
 
 def save_submission_csv(
@@ -302,7 +349,7 @@ def save_submission_csv(
         writer.writeheader()
         writer.writerows(rows)
 
-    print(f"Saved Kaggle submission CSV to {output_path}")
+    print_kv("Saved CSV", output_path)
 
 
 def build_detailed_records(
@@ -313,19 +360,19 @@ def build_detailed_records(
     if scored_results is not None:
         return scored_results
 
-    records = []
-    for item, response in zip(data, responses):
-        records.append(
-            {
-                "id": item.get("id"),
-                "is_mcq": bool(item.get("options")),
-                "response": response,
-            }
-        )
-    return records
+    return [
+        {
+            "id": item.get("id"),
+            "is_mcq": bool(item.get("options")),
+            "response": response,
+        }
+        for item, response in zip(data, responses)
+    ]
 
 
-# ── Single entry point ────────────────────────────────────────────────────────
+# =============================================================================
+# Single entry point
+# =============================================================================
 
 def run_inference(
     data_path: str = "data/private.jsonl",
@@ -367,15 +414,23 @@ def run_inference(
         score_outputs=score_outputs,
     )
 
-    print("RUN_TIMESTAMP:", run_timestamp)
-    print("MODEL_ID:", config.model_id)
-    print("DATA_PATH:", config.data_path)
-    print("OUTPUT_CSV_PATH:", config.output_csv_path)
-    print("OUTPUT_JSONL_PATH:", config.output_jsonl_path)
-    print("MAX_TOKENS:", config.max_tokens)
-    print("EVAL_N:", config.eval_n)
-    print("SCORE_OUTPUTS:", config.score_outputs)
+    print_section("Run Configuration")
+    print_kv("Run timestamp", run_timestamp)
+    print_kv("Model ID", config.model_id)
+    print_kv("Data path", config.data_path)
+    print_kv("Output CSV", config.output_csv_path)
+    print_kv("Output JSONL", config.output_jsonl_path)
+    print_kv("Max tokens", config.max_tokens)
+    print_kv("Max model length", config.max_model_len)
+    print_kv("Max sequences", config.max_num_seqs)
+    print_kv("Max batched tokens", config.max_num_batched_tokens)
+    print_kv("Temperature", config.temperature)
+    print_kv("Top-p", config.top_p)
+    print_kv("Top-k", config.top_k)
+    print_kv("Eval N", config.eval_n)
+    print_kv("Score outputs", config.score_outputs)
 
+    print_section("Loading Dataset")
     data = load_jsonl(config.data_path)
     print_dataset_stats(data, label="Full dataset")
 
@@ -383,9 +438,11 @@ def run_inference(
     print_dataset_stats(eval_data, label="Inference set")
 
     tokenizer, llm, sampling_params = load_model_and_tokenizer(config)
-    print("Model loaded.")
 
+    print_section("Building Prompts")
     prompts = build_chat_prompts(eval_data, tokenizer)
+    print_kv("Prompts built", len(prompts))
+
     responses = generate_responses(llm, prompts, sampling_params)
 
     assert len(responses) == len(eval_data), (
@@ -403,13 +460,30 @@ def run_inference(
         scored_results=scored_results,
     )
 
+    print_section("Saving Outputs")
     save_jsonl(config.output_jsonl_path, detailed_records)
     save_submission_csv(config.output_csv_path, eval_data, responses)
 
-    print("Done.")
-    print("JSONL:", config.output_jsonl_path)
-    print("CSV:", config.output_csv_path)
+    print_section("Done")
+    print_kv("JSONL", config.output_jsonl_path)
+    print_kv("CSV", config.output_csv_path)
 
+
+# =============================================================================
+# Command-line entry
+# =============================================================================
 
 if __name__ == "__main__":
+    # Final private-set submission run.
+    # This is the configuration the TA should use for reproducibility.
     run_inference()
+
+    # For quick local testing, temporarily replace the above with:
+    #
+    # run_inference(
+    #     data_path="data/public.jsonl",
+    #     output_dir="results",
+    #     run_name="public_eval_5_16k",
+    #     eval_n=5,
+    #     score_outputs=True,
+    # )
