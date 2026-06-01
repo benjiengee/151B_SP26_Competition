@@ -468,7 +468,7 @@ run_inference(
 ---
 
 ## LLM Disclaimer
-We acknowledge the use of AI tools in the development of this project. AI tools were used in the following context:
+We acknowledge the use of AI tools in the development of this project. All final code, experiments, model choices, hyperparamters, and submissions were made by the project team. AI tools were used in the following context:
 - Environment setup and debugging
 - Error debugging
 - Pipeline design and organization
@@ -477,5 +477,4 @@ We acknowledge the use of AI tools in the development of this project. AI tools 
 - Training and inference guidance
 - Result formatting and submission preparations
 - Documentation
-- Git and workflow support
-All final code, experiments, model choices, hyperparamters, and submissions were made by the project team. 
+- Git and workflow support 
