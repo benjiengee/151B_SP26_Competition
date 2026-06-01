@@ -468,13 +468,22 @@ run_inference(
 ---
 
 ## LLM Disclaimer
-We acknowledge the use of AI tools in the development of this project. All final code, experiments, model choices, hyperparamters, and submissions were made by the project team. AI tools were used in the following context:
-- Environment setup and debugging
-- Error debugging
-- Pipeline design and organization
-- Code generation and refactoring
-- Prompt engineering support
-- Training and inference guidance
-- Result formatting and submission preparations
-- Documentation
-- Git and workflow support 
+We acknowledge the use of AI tools in the development of this project. All final code, experiments, model choices, hyperparameters, and submissions were reviewed and made by the project team. AI tools were used in the following contexts:
+
+- **Environment setup and debugging:** Colab setup, A100 runtime setup, CUDA/vLLM compatibility, package/version conflicts
+
+- **Error debugging:** vLLM engine errors, CUDA library errors, multiprocessing issues, GPU memory issues, Colab disconnections
+
+- **Pipeline design and organization:** `run_inference()` structure, single-entry-point design, public/private evaluation workflow
+
+- **Code generation and refactoring:** helper functions, JSONL/CSV output writing, timestamped filenames, cleaner terminal logging
+
+- **Prompt engineering support:** math reasoning prompts, multiple-choice prompts, answer-format instructions
+
+- **Training and inference guidance:** SFT setup, dataset filtering/subsetting, token limits, batching settings, inference hyperparameters
+
+- **Result formatting and submission preparation:** Kaggle `id,response` CSV format, raw response preservation, output validation
+
+- **Documentation:** README setup instructions, model-weight instructions, reproducibility notes, usage examples
+
+- **Git and workflow support:** branch management, pull/rebase/merge guidance, commit inspection, repository cleanup
