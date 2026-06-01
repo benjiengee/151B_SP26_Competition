@@ -21,6 +21,7 @@ The final CSV produced by `run_inference()` is written automatically, so no manu
 
 ---
 
+## Single Entry Point
 The main entry point is `run_inference()` in `run_inference.py`. Calling this function runs the full pipeline end-to-end:
 
 1. Loads the model.
@@ -465,3 +466,16 @@ run_inference(
 ```
 
 ---
+
+## LLM Disclaimer
+We acknowledge the use of AI tools in the development of this project. AI tools were used in the following context:
+- Environment setup and debugging
+- Error debugging
+- Pipeline design and organization
+- Code generation and refactoring
+- Prompt engineering support
+- Training and inference guidance
+- Result formatting and submission preparations
+- Documentation
+- Git and workflow support
+All final code, experiments, model choices, hyperparamters, and submissions were made by the project team. 
