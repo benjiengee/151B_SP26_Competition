@@ -90,7 +90,7 @@ No manual post-processing is required.
 
 ---
 
-## Single Entry Point
+## Single Entry Point (Overview)
 
 The required single entry point is:
 
