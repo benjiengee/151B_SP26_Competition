@@ -1,6 +1,7 @@
 # CSE 151B Math Reasoning Competition
 
-### Team Medevac: Benjamin Ng, Miguel Santos, Kanishk Hari, & Derek Huang
+### Team: Medevac
+### Authors: Benjamin Ng, Miguel Santos, Kanishk Hari, & Derek Huang
 
 This repository contains our final inference pipeline for the **CSE 151B Spring 2026 Math Reasoning Competition**.
 
