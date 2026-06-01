@@ -1,5 +1,5 @@
 # CSE 151B Math Reasoning Competition
-
+ 
 This repository contains our final inference pipeline for the **CSE 151B Spring 2026 Math Reasoning Competition**.
 
 ---
