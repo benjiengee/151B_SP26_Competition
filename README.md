@@ -122,10 +122,10 @@ Our inference pipeline loads the model from Hugging Face.
 Final model path:
 
 ```text
-TODO: replace with final Hugging Face model path
+Qwen/Qwen3-4B-Thinking-2507
 ```
 
-For example:
+Supervised fine-tuned model path:
 
 ```text
 benjiengee/qwen3-4b-thinking-sft-merged
@@ -159,7 +159,7 @@ Platform: Google Colab Pro
 Approximate total inference time:
 
 ```text
-Private set, 16k max tokens: TODO: fill in final runtime
+Private set, 16k max tokens: 3 hours
 ```
 
 The pipeline was tested on an A100 GPU. Smaller GPUs may require reducing memory-related vLLM parameters such as:
