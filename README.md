@@ -3,44 +3,8 @@
 This repository contains our final inference pipeline for the **CSE 151B Spring 2026 Math Reasoning Competition**.
 
 ---
-## Notes on Reproducibility
 
-The course instructions state that string-identical outputs are not required because generation can vary. This repository includes the final model path, prompts, inference hyperparameters, and output formatting used for our submission.
-
-The intended reproducibility setup is:
-
-```text
-same repo + same Hugging Face model + same hyperparameters + comparable GPU
-```
-
-We used an A100 GPU for final inference. Running on smaller GPUs may require lowering memory-related vLLM settings.
-
-The final CSV produced by `run_inference()` is written automatically, so no manual post-processing is required.
-
-*Note: The `0.660` public score on Kaggle was generated through a run on `prompt_engineering.ipynb`. Minimal score fluctuation is expected since the model, hyperparameters, and any other impacting variables remain the same in finalized `run_inference()` pipeline. `run_inference()` is essentially `prompt_engineering.ipynb` refactored.*
-
----
-
-## Single Entry Point
-The main entry point is `run_inference()` in `run_inference.py`. Calling this function runs the full pipeline end-to-end:
-
-1. Loads the model.
-2. Loads the dataset.
-3. Builds prompts.
-4. Runs inference with vLLM.
-5. Writes the final Kaggle submission CSV.
-
-The final CSV contains the columns:
-
-```csv
-id,response
-```
-
-The `response` column contains the full model-generated response, including the reasoning trace and final boxed answer.
-
----
-
-## Quick Start: Reproduce Our Kaggle Submission
+# Quick Start: Reproduce Our Kaggle Submission
 
 This is the intended path for instructional staff verification.
 
@@ -90,7 +54,44 @@ No manual post-processing is required.
 
 ---
 
+## Notes on Reproducibility
+
+The course instructions state that string-identical outputs are not required because generation can vary. This repository includes the final model path, prompts, inference hyperparameters, and output formatting used for our submission.
+
+The intended reproducibility setup is:
+
+```text
+same repo + same Hugging Face model + same hyperparameters + comparable GPU
+```
+
+We used an A100 GPU for final inference. Running on smaller GPUs may require lowering memory-related vLLM settings.
+
+The final CSV produced by `run_inference()` is written automatically, so no manual post-processing is required.
+
+*Note: The `0.660` public score on Kaggle was generated through a run on `prompt_engineering.ipynb`. Minimal score fluctuation is expected since the model, hyperparameters, and any other impacting variables remain the same in finalized `run_inference()` pipeline. `run_inference()` is essentially `prompt_engineering.ipynb` refactored.*
+
+---
+
 ## Single Entry Point (Overview)
+The main entry point is `run_inference()` in `run_inference.py`. Calling this function runs the full pipeline end-to-end:
+
+1. Loads the model.
+2. Loads the dataset.
+3. Builds prompts.
+4. Runs inference with vLLM.
+5. Writes the final Kaggle submission CSV.
+
+The final CSV contains the columns:
+
+```csv
+id,response
+```
+
+The `response` column contains the full model-generated response, including the reasoning trace and final boxed answer.
+
+---
+
+## Single Entry Point (Details)
 
 The required single entry point is:
 
